@@ -1,0 +1,7 @@
+# Daisy call
+python ~/bin/daisy.py -r1 Ecoli_K12_mod_HPylori_1322000-1350000_mod_1115289-1147285.1.fa -r2 Ecoli_K12_mod_HPylori_1322000-1350000_mod_1115289-1147285.2.fa -ar ../Ecoli_K12.fa -dr ../Helicobacter_pylori_ML1.fasta -a "gi|170079663|ref|NC_010473.1|" -d "gi|766541424|dbj|AP014710.1|"
+
+# Preprocessing
+~/bin/sak Ecoli_K12_mod_HPylori_1322000-1350000_mod.fa -i 1115289-1147285 -o Ecoli_K12_mod_HPylori_1322000-1350000_mod_1115289-1147285.fa 
+~/bin/mason_simulator -ir Ecoli_K12_mod_HPylori_1322000-1350000_mod_1115289-1147285.fa -n 10666 -o Ecoli_K12_mod_HPylori_1322000-1350000_mod_1115289-1147285.1.fa -or Ecoli_K12_mod_HPylori_1322000-1350000_mod_1115289-1147285.2.fa --fragment-mean-size 500 --fragment-size-std-dev 50 --illumina-read-length 150
+
