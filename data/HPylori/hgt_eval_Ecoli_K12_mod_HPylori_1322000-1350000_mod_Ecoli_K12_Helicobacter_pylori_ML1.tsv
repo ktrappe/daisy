@@ -1,0 +1,12 @@
+#AS: Acceptor start position
+#AE: Acceptor end position
+#DS: Donor start position
+#DE: Donor end position
+#MC: Mean coverage in region
+#Split: Total number split-reads per region (including duplicates!)
+#PS-S: Pairs spanning HGT boundaries
+#PS-W: Pairs within HGT boundaries
+#Phage: PS-S and PS-W reads mapping to phage database
+#BS:MC/PS-S/PS-W: Percent of bootstrapped random regions with MC/PS-S/PS-W smaller than candidate
+AS	AE	MC	BS:MC	DS	DE	MC	Split	PS-S	PS-W	Phage	BS:MC	BS:PS-S	BS:PS-W
+1120261	1120263	17.00	5	1322001	1350000	34.08	48	75	3133	0.8061	100	100	100
