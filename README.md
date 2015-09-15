@@ -63,13 +63,16 @@ The produced result files should be the same as the corresponding *gold* files
 provided in the folder.
 ##### H. pylori data set
 The H. pylori data set is the complete simulated data set evaluated in the paper.
-From within the HPylori folder, you can run it via
+From within the HPylori folder, you can re-run it via
 ```
 python ~/bin/daisy.py -r1 Ecoli_K12_mod_HPylori_1322000-1350000_mod.1.fasta
                       -r2 Ecoli_K12_mod_HPylori_1322000-1350000_mod.2.fasta
                       -ar ../Ecoli_K12.fa -dr ../Helicobacter_pylori_ML1.fasta
                       -a "gi|170079663|ref|NC_010473.1|" -d "gi|766541424|dbj|AP014710.1|"
+                      -new
 ```
+Daisy checks for the presence of already computed files. So if you omit the `-new` parameter, Daisy will recognize the existing files and run through without changing results.
+Use the `-task` parameter to assign job names. You can also specify each pipeline step to be run or not run separately (see help message).
 
 ## Output Formats
 Daisy currently supports the VCF output format for reporting HGT candidates
