@@ -86,6 +86,7 @@ def producedict():
     argsD['b_yaraM'] = '--yaraMapper'
     argsD['donor'] = '--donor'
     argsD['donref'] = '--donref'
+    argsD['donref2'] = '--donref2'
     argsD['g_bth'] = '--gustaf_bth'
     argsD['g_cbp'] = '--gustaf_cbp'
     argsD['g_gth'] = '--gustaf_gth'
@@ -131,6 +132,7 @@ def parser():
     optional.add_argument('-r2', '--read2', dest='read2fasta', nargs='?', type=str, default=None, help='Paired-end reads 2')
     required.add_argument('-ar', '--acceptor_ref', dest='accref', nargs='?', type=str, required=True, default=None, help='Reference file of acceptor')
     required.add_argument('-dr', '--donor_ref', dest='donref', nargs='?', type=str, required=True, default=None, help='Reference file of donor')
+    required.add_argument('-dr2', '--donor_ref2', dest='donref2', nargs='?', type=str, default=None, help='Second reference file of donor')
     optional.add_argument('-pr', '--phage_ref', dest='phage_ref', nargs='?', type=str, default=None, help='Phage database reference file')
     required.add_argument('-a', '--acceptor', dest='acceptor', nargs='?', type=str, required=True, default=None, help='Name of acceptor (gi from reference file)')
     required.add_argument('-d', '--donor', dest='donor', nargs='?', type=str, required=True, default=None, help='Name of donor (gi from reference file)')
@@ -211,6 +213,8 @@ def pipeline():
     readname = args.read1fasta.split('.')[0]
     accref = args.accref.split('.')[0]
     donref = args.donref.split('.')[0]
+    if (args.donref2 is not None):
+        donref2 = args.donref2.split('.')[0]
     if (args.task != ''):
         args.task += '_'
 
@@ -223,8 +227,12 @@ def pipeline():
     # cat acc.fa don.fa > acc_don.fa
 
     candidateRef = '{}{}_{}.fa'.format(args.outdir, accref, donref)
+    if (args.donref2 is not None):
+        candidateRef = '{}{}_{}_{}.fa'.format(args.outdir, accref, donref, donref2)
     if args.b_cat and (args.b_new or not checkExistence(logger,'Joining Candidate Genomes',candidateRef)):
         cmd = 'cat {} {} > {}'.format(args.accref, args.donref, candidateRef)
+        if (args.donref2 is not None):
+            cmd = 'cat {} {} {} > {}'.format(args.accref, args.donref, args.donref2, candidateRef)
         printAndWrite('Start Joining Candidate Genomes', 'Start Joining Candidate Genomes', logger, 'info')
         logger.debug(cmd)
         try:
