@@ -132,7 +132,7 @@ def parser():
     optional.add_argument('-r2', '--read2', dest='read2fasta', nargs='?', type=str, default=None, help='Paired-end reads 2')
     required.add_argument('-ar', '--acceptor_ref', dest='accref', nargs='?', type=str, required=True, default=None, help='Reference file of acceptor')
     required.add_argument('-dr', '--donor_ref', dest='donref', nargs='?', type=str, required=True, default=None, help='Reference file of donor')
-    required.add_argument('-dr2', '--donor_ref2', dest='donref2', nargs='?', type=str, default=None, help='Second reference file of donor')
+    optional.add_argument('-dr2', '--donor_ref2', dest='donref2', nargs='?', type=str, default=None, help='Second reference file of donor')
     optional.add_argument('-pr', '--phage_ref', dest='phage_ref', nargs='?', type=str, default=None, help='Phage database reference file')
     required.add_argument('-a', '--acceptor', dest='acceptor', nargs='?', type=str, required=True, default=None, help='Name of acceptor (gi from reference file)')
     required.add_argument('-d', '--donor', dest='donor', nargs='?', type=str, required=True, default=None, help='Name of donor (gi from reference file)')
@@ -179,7 +179,7 @@ def pipeline(args):
 
     tstart = time.time()
 
-    rundir = sys.argv[0].strip('daisy.py')
+    rundir = os.path.dirname(sys.argv[0])+'/'
 
     if (args.read2fasta is not None):
         args.h_pairs = True
@@ -209,11 +209,11 @@ def pipeline(args):
                 args.argF.write('{}={}\n'.format(argsD[arg],getattr(args,arg)))
         args.argF.close()
     
-    readname = args.read1fasta.split('.')[0]
-    accref = args.accref.split('.')[0]
-    donref = args.donref.split('.')[0]
+    readname = os.path.basename(args.read1fasta).split('.')[0]
+    accref = os.path.basename(args.accref).split('.')[0]
+    donref = os.path.basename(args.donref).split('.')[0]
     if (args.donref2 is not None):
-        donref2 = args.donref2.split('.')[0]
+        donref2 = os.path.basename(args.donref2).split('.')[0]
     if (args.task != ''):
         args.task += '_'
 
