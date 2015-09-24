@@ -175,11 +175,10 @@ def parser():
     hgt.add_argument('-sen', '--hgteval_bootsens', dest='h_bootsens', nargs='?', type=validInt, default='95', help='HGT evaluation percent of sample region sensitivity (Default: %(default)s)')
     return parser
 
-def pipeline():
+def pipeline(args):
 
     tstart = time.time()
 
-    args = parser().parse_args()
     rundir = sys.argv[0].strip('daisy.py')
 
     if (args.read2fasta is not None):
@@ -654,4 +653,5 @@ def pipeline():
     print "Total time: ", time.time() - tstart
 
 if __name__ == '__main__':
-    pipeline()
+    args = parser().parse_args()
+    pipeline(args)
