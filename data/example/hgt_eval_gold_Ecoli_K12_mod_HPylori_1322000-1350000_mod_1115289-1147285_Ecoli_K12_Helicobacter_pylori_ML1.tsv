@@ -9,4 +9,4 @@
 #Phage: PS-S and PS-W reads mapping to phage database
 #BS:MC/PS-S/PS-W: Percent of bootstrapped random regions with MC/PS-S/PS-W smaller than candidate
 AS	AE	MC	BS:MC	DS	DE	MC	Split	PS-S	PS-W	Phage	BS:MC	BS:PS-S	BS:PS-W
-1120261	1120263	26.50	100	1321999	1350000	101.13	138	171	9325	0.0000	100	100	100
+1120261	1120263	26.50	100	1321999	1350000	101.13	140	171	9325	0.0000	100	99	100
