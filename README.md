@@ -60,8 +60,10 @@ python ~/bin/daisy.py -r1 Ecoli_K12_mod_HPylori_1322000-1350000_mod_1115289-1147
 ```
 If you have downloaded the phage database, add its path to the program call
 using the '--phage_ref' option (e.g. --phage_ref phage_all.fasta).
-The produced result files should be the same as the corresponding *gold* files
-provided in the folder.
+The produced result files should be equivalent to the corresponding *gold* files
+provided in the folder, but exact breakpoint positions might vary due to input parallelization.
+To enforce *exactly* same results, use option '-nth 1' (one thread).
+
 ##### H. pylori data set
 The H. pylori data set is the complete simulated data set evaluated in the paper.
 From within the HPylori folder, you can re-run it via
