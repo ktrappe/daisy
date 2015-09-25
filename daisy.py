@@ -229,9 +229,9 @@ def pipeline(args):
     if (args.donref2 is not None):
         candidateRef = '{}{}_{}_{}.fa'.format(args.outdir, accref, donref, donref2)
     if args.b_cat and (args.b_new or not checkExistence(logger,'Joining Candidate Genomes',candidateRef)):
-        cmd = 'cat {} {} > {}'.format(args.accref, args.donref, candidateRef)
+        cmd = 'cat {} {} > {} && sed -i "/^[^>]/ s/[^ACTG]/N/g" {}'.format(args.accref, args.donref, candidateRef, candidateRef)
         if (args.donref2 is not None):
-            cmd = 'cat {} {} {} > {}'.format(args.accref, args.donref, args.donref2, candidateRef)
+            cmd = 'cat {} {} {} > {} && sed -i "/^[^>]/ s/[^ACTG]/N/g" {}'.format(args.accref, args.donref, args.donref2, candidateRef, candidateRef)
         printAndWrite('Start Joining Candidate Genomes', 'Start Joining Candidate Genomes', logger, 'info')
         logger.debug(cmd)
         try:
