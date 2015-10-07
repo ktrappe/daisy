@@ -65,6 +65,14 @@ def validInt(s):
     except:
         raise argparse.ArgumentTypeError('{} is not an int.'.format(s))
 
+# parse donor file with GIs
+def get_GIs(donorfile):
+    with open(donorfile) as input:
+        for line in input:
+            line = line.replace('\n', '')
+            name = line.split('|')[3]
+            yield(line,name)
+
 def producedict():
     argsD = dict()
     argsD['acceptor'] = '--acceptor'
@@ -85,6 +93,7 @@ def producedict():
     argsD['b_yaraI'] = '--yaraIndex'
     argsD['b_yaraM'] = '--yaraMapper'
     argsD['donor'] = '--donor'
+    argsD['donor2'] = '--donor2'
     argsD['donref'] = '--donref'
     argsD['donref2'] = '--donref2'
     argsD['g_bth'] = '--gustaf_bth'
@@ -119,6 +128,7 @@ def producedict():
 def parser():
     parser = argparse.ArgumentParser(fromfile_prefix_chars='@',description='DAISY',add_help=False)
     required = parser.add_argument_group('required arguments')
+    mutrequired = parser.add_mutually_exclusive_group(required=True)
     optional = parser.add_argument_group('optional arguments')
     yara = parser.add_argument_group('Yara arguments')
     sam = parser.add_argument_group('Samtools arguments')
@@ -135,7 +145,8 @@ def parser():
     optional.add_argument('-dr2', '--donor_ref2', dest='donref2', nargs='?', type=str, default=None, help='Second reference file of donor')
     optional.add_argument('-pr', '--phage_ref', dest='phage_ref', nargs='?', type=str, default=None, help='Phage database reference file')
     required.add_argument('-a', '--acceptor', dest='acceptor', nargs='?', type=str, required=True, default=None, help='Name of acceptor (gi from reference file)')
-    required.add_argument('-d', '--donor', dest='donor', nargs='?', type=str, required=True, default=None, help='Name of donor (gi from reference file)')
+    mutrequired.add_argument('-d', '--donor', dest='donor', nargs='?', type=str, default=None, help='Name(s) of donor (gi from reference file)')
+    mutrequired.add_argument('-d2', '--donor2', dest='donor2', nargs='?', type=str, default=None, help='File of names of donor (gi from reference file); one gi per line')
     optional.add_argument('-t', '--task', dest='task', nargs='?', type=str, default='', help='Define optional taskname. Will be used as prefix for created files.')
     optional.add_argument('-new', '--overwrite', dest='b_new', action='store_true', default=False, help='Overwrite existing files. (Default: %(default)s)')
     optional.add_argument('-rev', '--reverse', dest='rev', action='store_false', default=True, help='Define which modules are not to be run instead of which are to be run. (Default: %(default)s)')
@@ -636,19 +647,36 @@ def pipeline(args):
     # HGT candidate evaluation
     # python ~/bin/hgt_eval.py -o hgt_eval*.vcf  --min_size 500 --max_size 55000 Ecoli_K12_mod_HPylori_1322000-1350000_mod.sort-qname.bam hgt_cand*.txt  "gi|170079663|ref|NC_010473.1|" "gi|766541424|dbj|AP014710.1|"
     #  #!usr/bin/env python as first line in hgt_eval.py => ./hgt_eval.py will run python hgt_eval.py. (Or import it as module.)
-    hgteval_vcf = '{}hgt_eval_{}{}_{}_{}.vcf'.format(args.outdir, args.task, readname, accref, donref)
-    if args.b_eval and (args.b_new or not checkExistence(logger,'Sorting Mapping', hgteval_vcf)):
-        cmd = [x for x in ['python', '{}hgt_eval.py'.format(rundir), mappedSortedQBam, hgt_cand, args.acceptor, args.donor, '--phagefile' if args.phage_ref is not None else None, phagesam,
-         '-o', hgteval_vcf, '--min-size', args.h_min, '--max-size', args.h_max, '--tolerance', args.h_tol, '--pair-support' if args.h_pairs is False else None, '--num-boot-regions', args.h_bootnum, '--boot-sens', args.h_bootsens] if x is not None]
-        # hgt_eval.func(parameter)
-        printAndWrite('Start HGT evaluation', 'Start HGT evaluation', logger, 'info')
-        logger.debug(' '.join(cmd))
-        try:
-            call(cmd, logger)
-        except sp.CalledProcessError:
-            printAndWrite('Error in HGT evaluation. Exiting.', 'Exiting.', logger, 'exception')
-            sys.exit(1)
-        printAndWrite('End HGT evaluation', 'End HGT evaluation', logger, 'info')
+
+    if (args.donor is not None):
+        hgteval_vcf = '{}hgt_eval_{}{}_{}_{}.vcf'.format(args.outdir, args.task, readname, accref, donref)
+        if args.b_eval and (args.b_new or not checkExistence(logger,'Sorting Mapping', hgteval_vcf)):
+            cmd = [x for x in ['python', '{}hgt_eval.py'.format(rundir), mappedSortedQBam, hgt_cand, args.acceptor, args.donor, '--phagefile' if args.phage_ref is not None else None, phagesam,
+             '-o', hgteval_vcf, '--min-size', args.h_min, '--max-size', args.h_max, '--tolerance', args.h_tol, '--pair-support' if args.h_pairs is False else None, '--num-boot-regions', args.h_bootnum, '--boot-sens', args.h_bootsens] if x is not None]
+            # hgt_eval.func(parameter)
+            printAndWrite('Start HGT evaluation', 'Start HGT evaluation', logger, 'info')
+            logger.debug(' '.join(cmd))
+            try:
+                call(cmd, logger)
+            except sp.CalledProcessError:
+                printAndWrite('Error in HGT evaluation. Exiting.', 'Exiting.', logger, 'exception')
+                sys.exit(1)
+            printAndWrite('End HGT evaluation', 'End HGT evaluation', logger, 'info')
+    else:
+        for don_gi, don_id in get_GIs(args.donor2):
+            hgteval_vcf = '{}hgt_eval_{}{}_{}_{}.vcf'.format(args.outdir, args.task, readname, accref, don_id)
+            if args.b_eval and (args.b_new or not checkExistence(logger,'Sorting Mapping', hgteval_vcf)):
+                cmd = [x for x in ['python', '{}hgt_eval.py'.format(rundir), mappedSortedQBam, hgt_cand, args.acceptor, don_gi, '--phagefile' if args.phage_ref is not None else None, phagesam,
+                 '-o', hgteval_vcf, '--min-size', args.h_min, '--max-size', args.h_max, '--tolerance', args.h_tol, '--pair-support' if args.h_pairs is False else None, '--num-boot-regions', args.h_bootnum, '--boot-sens', args.h_bootsens] if x is not None]
+                # hgt_eval.func(parameter)
+                printAndWrite('Start HGT evaluation', 'Start HGT evaluation', logger, 'info')
+                logger.debug(' '.join(cmd))
+                try:
+                    call(cmd, logger)
+                except sp.CalledProcessError:
+                    printAndWrite('Error in HGT evaluation. Exiting.', 'Exiting.', logger, 'exception')
+                    sys.exit(1)
+                printAndWrite('End HGT evaluation', 'End HGT evaluation', logger, 'info')
 
     print ("Total time: ", time.time() - tstart)
 
