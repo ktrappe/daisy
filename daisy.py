@@ -650,7 +650,7 @@ def pipeline(args):
             sys.exit(1)
         printAndWrite('End HGT evaluation', 'End HGT evaluation', logger, 'info')
 
-    print "Total time: ", time.time() - tstart
+    print ("Total time: ", time.time() - tstart)
 
 if __name__ == '__main__':
     args = parser().parse_args()

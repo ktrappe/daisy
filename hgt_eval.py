@@ -226,13 +226,13 @@ def main():
     don_tid = bf.gettid(options.donor)
     options.out_all = options.outfile.strip('vcf')+'tsv'
 
-    print 'acc_tid', acc_tid, options.acceptor
-    print 'don_tid', don_tid, options.donor
-    print 'hgt_minLength', hgt_minLength
-    print 'hgt_maxLength', hgt_maxLength
-    print 'paired_reads', options.paired_reads
-    print 'num_boot_regions', options.boot_num
-    print 'boot_sensitivity', options.boot_sens
+    print ('acc_tid', acc_tid, options.acceptor)
+    print ('don_tid', don_tid, options.donor)
+    print ('hgt_minLength', hgt_minLength)
+    print ('hgt_maxLength', hgt_maxLength)
+    print ('paired_reads', options.paired_reads)
+    print ('num_boot_regions', options.boot_num)
+    print ('boot_sensitivity', options.boot_sens)
 
     # Getting acceptor genome length
     options.acc_length = bf.lengths[acc_tid]
@@ -293,7 +293,7 @@ def main():
                 split_support = (cand_start.split_support + cand_end.split_support)
                 hgt_list.append(HGT(acc_start, acc_end, cand_start.acc_base, cand_end.acc_base, don_start, don_end, split_support, options, acc_cov, don_cov))
 
-    print time.clock() - tstart
+    print (time.clock() - tstart)
 
     # Get (all/primary) read pairs which map to both donor and acceptor and add them to hgt attributes
     if (options.paired_reads): 
@@ -312,7 +312,7 @@ def main():
                 continue
             for hgt in hgt_list:
                 hgt.add_pair_if_matching(aln1, aln2, phage_list)
-    print "total sample time ", time.clock() - tstart
+    print ("total sample time ", time.clock() - tstart)
     
     # Output results       
     with open(options.outfile, 'w') as vcf_out, open(options.out_all, 'w') as output:
@@ -376,7 +376,7 @@ def main():
             hgt_vcf_counter += 1
 
         if (hgt_vcf_counter == 1):
-            print 'No canidates written to VCF, try to rerun with lower sampling sensitivity (--boot_sens)'
+            print ('No canidates written to VCF, try to rerun with lower sampling sensitivity (--boot_sens)')
 
 
 if __name__ == '__main__':
