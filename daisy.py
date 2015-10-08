@@ -651,7 +651,7 @@ def pipeline(args):
     #  #!usr/bin/env python as first line in hgt_eval.py => ./hgt_eval.py will run python hgt_eval.py. (Or import it as module.)
 
     if (args.donor is not None):
-        hgteval_vcf = '{}hgt_eval_{}_{}_{}_{}.vcf'.format(args.outdir, args.task, readname, accref, donref)
+        hgteval_vcf = '{}hgt_eval_{}{}_{}_{}.vcf'.format(args.outdir, args.task, readname, accref, donref)
         if args.b_eval and (args.b_new or not checkExistence(logger,'Sorting Mapping', hgteval_vcf)):
             cmd = [x for x in ['python', '{}hgt_eval.py'.format(rundir), mappedSortedQBam, hgt_cand, args.acceptor, args.donor, '--phagefile' if args.phage_ref is not None else None, phagesam,
              '-o', hgteval_vcf, '--min-size', args.h_min, '--max-size', args.h_max, '--tolerance', args.h_tol, '--pair-support' if args.h_pairs is False else None, '--num-boot-regions', args.h_bootnum, '--boot-sens', args.h_bootsens] if x is not None]
@@ -666,7 +666,7 @@ def pipeline(args):
             printAndWrite('End HGT evaluation', 'End HGT evaluation', logger, 'info')
     else:
         for don_gi, don_id in get_GIs(args.donor2):
-            hgteval_vcf = '{}hgt_eval_{}_{}_{}_{}.vcf'.format(args.outdir, args.task, readname, accref, don_id)
+            hgteval_vcf = '{}hgt_eval_{}{}_{}_{}.vcf'.format(args.outdir, args.task, readname, accref, don_id)
             if args.b_eval and (args.b_new or not checkExistence(logger,'Sorting Mapping', hgteval_vcf)):
                 cmd = [x for x in ['python', '{}hgt_eval.py'.format(rundir), mappedSortedQBam, hgt_cand, args.acceptor, don_gi, '--phagefile' if args.phage_ref is not None else None, phagesam,
                  '-o', hgteval_vcf, '--min-size', args.h_min, '--max-size', args.h_max, '--tolerance', args.h_tol, '--pair-support' if args.h_pairs is False else None, '--num-boot-regions', args.h_bootnum, '--boot-sens', args.h_bootsens] if x is not None]
