@@ -3,7 +3,10 @@
 import sys
 import os
 import argparse
-import subprocess32 as sp
+if sys.version_info < (3, 2):
+    import subprocess32 as sp
+else:
+    import subprocess as sp
 import select
 import logging
 import time
