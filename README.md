@@ -12,7 +12,8 @@ Gustaf for mapping, and contains a Python based evaluation routine.
 Contact: kathrin.trappe@fu-berlin.de
 
 ## Installing Daisy
-Daisy needs to have Python installed with a version supporting `subprocess32`.
+Daisy needs to have Python installed, either with a version supporting `subprocess32`
+(>v3.2) or with the package `subprocess32` installed additionally.
 The easiest way to get Daisy is to
 download **daisy.py** and the script **hgt_eval.py** and place both scripts in your
 `~/bin/` directory.
