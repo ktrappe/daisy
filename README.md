@@ -77,6 +77,12 @@ python ~/bin/daisy.py -r1 Ecoli_K12_mod_HPylori_1322000-1350000_mod.1.fasta
 Daisy checks for the presence of already computed files. So if you omit the `-new` parameter, Daisy will recognize the existing files and run through without changing results.
 Use the `-task` parameter to assign job names. You can also specify each pipeline step to be run or not run separately (see help message).
 
+##### Multiple donor candidates
+If you want to test multiple donor candidates at once, use the `-d2` parameter with a textfile containing the desired donor gis. The program expects one gi per line. The donor reference file then has to contain all donor references (multifasta). Alternatively, you can provide a second donor reference file with parameter `-dr2`.
+```
+python ~/bin/daisy.py [...] -dr multifasta.fasta -d2 donor_candidates.txt
+```
+
 ## Output Formats
 Daisy currently supports the VCF output format for reporting HGT candidates
 meeting the pre-defined threshold.
