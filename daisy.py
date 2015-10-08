@@ -228,10 +228,12 @@ def pipeline(args):
     if (args.task != ''):
         args.task += '_'
 
-    # info=whats running, debug=commands and program's output, error=errors
-    logging.basicConfig(format='%(levelname)s:%(message)s', filename='{}{}{}_{}_{}.log.txt'.format(args.outdir, args.task, readname, accref, donref), filemode='w',  level=logging.DEBUG)
-    logger = logging.getLogger('log_subprocesses')
-
+    # Create a new logger if none exists.
+    try:
+        logger = args.logger
+    except AttributeError:
+        logging.basicConfig(format='%(levelname)s:%(message)s', filename='{}{}{}_{}_{}.log.txt'.format(args.outdir, args.task, readname, accref, donref), filemode='w',  level=logging.DEBUG)
+        logger = logging.getLogger('log_subprocesses')
 
     # Joining candidate genomes
     # cat acc.fa don.fa > acc_don.fa
