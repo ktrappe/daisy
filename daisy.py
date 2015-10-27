@@ -193,8 +193,9 @@ def pipeline(args):
 
     tstart = time.time()
 
-    #rundir = os.path.dirname(sys.argv[0])+'/'
-    rundir = sys.argv[0].strip('daisy.py')
+    rundir = os.path.dirname(sys.argv[0])
+    if (rundir != ''):
+        rundir += '/'
 
     if (args.read2fasta is not None):
         args.h_pairs = True
