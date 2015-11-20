@@ -30,16 +30,16 @@ http://bedtools.readthedocs.org/en/latest/
 
 
 ###### Yara, Stellar, Gustaf, SAK
-Precompiled binaries (Linux 64-bit, Windows, Mac OS X) of Yara, Stellar, Gustaf,
-and SAK can be downloaded from the SeqAn projects download page:
-http://www.seqan.de/downloads/projects.html
-
 All tools are distributed with SeqAn - The C++ Sequence Analysis Library (see
-http://www.seqan.de). To build them yourself, you can check out the latest
+http://www.seqan.de). Please check out the latest
 developer version of SeqAn on:
 http://github.com/seqan/seqan/tree/develop/
 Follow the installation guides given on
 http://seqan.readthedocs.org/en/master/Tutorial/GettingStarted/LinuxMakefiles.html
+
+Precompiled binaries (Linux 64-bit, Windows, Mac OS X) of Yara, Stellar, Gustaf,
+and SAK can be downloaded via the SeqAn project pages:
+http://www.seqan.de/projects/
 
 
 ###### Phage database
