@@ -242,11 +242,11 @@ def main():
     covs = [np.zeros((l,)) for l in bf.lengths]
     num_matches = 0 # number of read matches, unused by now
     for read in bf:
-		if not read.is_unmapped:
-			r_start = read.pos # start position
-			r_end = read.pos + read.qlen # end
-			covs[read.tid][r_start:r_end] += 1
-			num_matches += 1
+        if not read.is_unmapped:
+            r_start = read.pos # start position
+            r_end = read.pos + read.qlen # end
+            covs[read.tid][r_start:r_end] += 1
+            num_matches += 1
     bf.reset()
 
     acc_cov = covs[acc_tid]
