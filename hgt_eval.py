@@ -1,11 +1,7 @@
 #!usr/bin/env python
 
-import matplotlib
-matplotlib.use('Agg')
 import pysam
 import numpy as np
-import scipy.stats as st
-import matplotlib.pyplot as plt
 import sys
 import csv
 import argparse
@@ -13,7 +9,6 @@ import operator
 import random
 import time
 import string
-#from multiprocessing.dummy import Pool as TP
 
 __author__ = "Kathrin Trappe"
 
