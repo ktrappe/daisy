@@ -283,6 +283,73 @@ def pipeline(args):
                     sys.exit(1)
             printAndWrite('End Yara Mapper', 'End Yara Mapper', logger, 'info')
 
+        # samtools view -bS *all.sam -o *all.bam
+
+        mappedBam = '{}{}{}_{}_{}.bam'.format(args.outdir, args.task, readname, accref, donref)
+        if args.b_preproc and checkExistence(logger, 'Generating', mapping) and (args.b_new or not checkExistence(logger, 'Generating Mapped BAM', mappedBam)):
+            cmd = ['{}samtools'.format(rundir), 'view', '-b', '-S', mapping, '-o', mappedBam]
+            printAndWrite('Start Converting Mapped Sam to BAM', 'Start Converting Mapped Sam to BAM', logger, 'info')
+            logger.debug(' '.join(cmd))
+            try:
+                call(cmd, logger)
+            except sp.CalledProcessError:
+                printAndWrite('Error in Converting Mapped Sam to BAM. Exiting.', 'Exiting.', logger, 'exception')
+                sys.exit(1)
+            except OSError:
+                logger.warning('Could not find samtools in working directory. Trying global next.')
+                cmd = ['samtools', 'view', '-b', '-S', mapping, '-o', mappedBam]
+                logger.debug(' '.join(cmd))
+                try:
+                    call(cmd, logger)
+                except sp.CalledProcessError:
+                    printAndWrite('Error in Converting Mapped Sam to BAM. Exiting.', 'Exiting.', logger, 'exception')
+                    sys.exit(1)
+            printAndWrite('End Converting Mapped Sam to BAM', 'End Converting Mapped Sam to BAM', logger, 'info')
+
+        # Delete sam file
+        try:
+            #if args.b_del:
+            printAndWrite('Deleting Sam files', 'Deleting Sam files', logger, 'info')
+            cmd = ('find {} -type f -regextype posix-extended  \( -wholename \'{}\' \) -delete').format(args.outdir, mapping)
+            logger.debug(cmd)
+            call(cmd, logger, shell=True)
+        except Exception as e:
+            printAndWrite(
+                'Error in Deleting.',
+                'Error in Deleting.',
+                logger,
+                'exception')
+            pass
+
+
+
+
+        # samtools --> sort mapped bam (qname)
+        # samtools sort -n *all.bam *all.sort-qname
+
+        mappedSortedQBam = '{}{}{}_{}_{}.sort-qname'.format(args.outdir, args.task, readname, accref, donref)
+        if args.b_preproc and (args.b_new or not checkExistence(logger, 'Sorting BAM', mappedSortedQBam+'.bam')):
+            cmd = ['{}samtools'.format(rundir), 'sort', '-n', mappedBam, mappedSortedQBam]
+            printAndWrite('Start Sorting BAM', 'Start Sorting BAM', logger, 'info')
+            logger.debug(' '.join(cmd))
+            try:
+                call(cmd, logger)
+            except sp.CalledProcessError:
+                printAndWrite('Error in Sorting BAM (qname). Exiting.', 'Exiting.', logger, 'exception')
+                sys.exit(1)
+            except OSError:
+                logger.warning('Could not find samtools in working directory. Trying global next.')
+                cmd = ['samtools', 'sort', '-n', mappedBam, mappedSortedQBam]
+                logger.debug(' '.join(cmd))
+                try:
+                    call(cmd, logger)
+                except sp.CalledProcessError:
+                    printAndWrite('Error in Sorting BAM (qname). Exiting.', 'Exiting.', logger, 'exception')
+                    sys.exit(1)
+            printAndWrite('End Sorting BAM (qname)', 'End Sorting BAM (qname)', logger, 'info')
+        mappedSortedQBam += '.bam'
+
+
 
         # samtools --> sort unmapped bam
         # samtools view -b -F 2 -S *all.sam > *unmapped.bam
@@ -291,7 +358,7 @@ def pipeline(args):
         unmappedBam = '{}{}{}_{}_{}_unmapped.bam'.format(args.outdir, args.task, readname, accref, donref)
         unmappedSortedBam = '{}{}{}_{}_{}_unmapped.sort'.format(args.outdir, args.task, readname, accref, donref)
         if args.b_preproc and (args.b_new or not checkExistence(logger, 'Sorting Mapping', unmappedBam, unmappedSortedBam+'.bam')):
-            cmd = ['{}samtools'.format(rundir), 'view', '-b', '-F', args.sam_F, '-S', mapping, '-o', unmappedBam]
+            cmd = ['{}samtools'.format(rundir), 'view', '-b', '-F', args.sam_F, mappedBam, '-o', unmappedBam]
             printAndWrite('Start Samtools Extract Unmapped to BAM', 'Start Samtools Extract Unmapped to BAM', logger, 'info')
             logger.debug(' '.join(cmd))
             try:
@@ -301,7 +368,7 @@ def pipeline(args):
                 sys.exit(1)
             except OSError:
                 logger.warning('Could not find samtools in working directory. Trying global next.')
-                cmd = ['samtools', 'view', '-b', '-F', args.sam_F, '-S', mapping, '-o', unmappedBam]
+                cmd = ['samtools', 'view', '-b', '-F', args.sam_F, mappedBam, '-o', unmappedBam]
                 logger.debug(' '.join(cmd))
                 try:
                     sp.call(cmd)           
@@ -330,6 +397,21 @@ def pipeline(args):
             printAndWrite('End Samtools Sort Unmapped BAM', 'End Samtools Sort Unmapped BAM', logger, 'info')
         unmappedSortedBam += '.bam'
 
+        # Delete mappedBam and unmappedBam file
+        try:
+            if args.b_del:
+                cmd = ('find {} -type f -regextype posix-extended  \( -wholename \'{}\' -o -wholename \'{}\' \) -delete').format(args.outdir, mappedBam, unmappedBam)
+                logger.debug(cmd)
+                call(cmd, logger, shell=True)
+        except Exception as e:
+            printAndWrite(
+                'Error in Deleting.',
+                'Error in Deleting.',
+                logger,
+                'exception')
+            pass
+
+
         # bedtools --> unmapped fastq
         # bedtools bamtofastq -i *unmapped.sort.bam -fq *unmapped.sort.1.fastq -fq2 *unmapped.sort.2.fastq
 
@@ -357,57 +439,6 @@ def pipeline(args):
                     printAndWrite('Error in Converting to Unmapped FASTQ. Exiting.', 'Exiting.', logger, 'exception')
                     sys.exit(1)
             printAndWrite('End Converting to Unmapped FASTQ', 'End Converting to Unmapped FASTQ', logger, 'info')
-
-
-        # samtools view -bS *all.sam -o *all.bam
-
-        mappedBam = '{}{}{}_{}_{}.bam'.format(args.outdir, args.task, readname, accref, donref)
-        if args.b_preproc and checkExistence(logger, 'Generating', mapping) and (args.b_new or not checkExistence(logger, 'Generating Mapped BAM', mappedBam)):
-            cmd = ['{}samtools'.format(rundir), 'view', '-b', '-S', mapping, '-o', mappedBam]
-            printAndWrite('Start Converting Mapped Sam to BAM', 'Start Converting Mapped Sam to BAM', logger, 'info')
-            logger.debug(' '.join(cmd))
-            try:
-                call(cmd, logger)
-            except sp.CalledProcessError:
-                printAndWrite('Error in Converting Mapped Sam to BAM. Exiting.', 'Exiting.', logger, 'exception')
-                sys.exit(1)
-            except OSError:
-                logger.warning('Could not find samtools in working directory. Trying global next.')
-                cmd = ['samtools', 'view', '-b', '-S', mapping, '-o', mappedBam]
-                logger.debug(' '.join(cmd))
-                try:
-                    call(cmd, logger)           
-                except sp.CalledProcessError:
-                    printAndWrite('Error in Converting Mapped Sam to BAM. Exiting.', 'Exiting.', logger, 'exception')
-                    sys.exit(1)
-            printAndWrite('End Converting Mapped Sam to BAM', 'End Converting Mapped Sam to BAM', logger, 'info')
-
-
-        # samtools --> sort mapped bam (qname)
-        # samtools sort -n *all.bam *all.sort-qname
-
-        mappedSortedQBam = '{}{}{}_{}_{}.sort-qname'.format(args.outdir, args.task, readname, accref, donref)
-        if args.b_preproc and (args.b_new or not checkExistence(logger, 'Sorting BAM', mappedSortedQBam+'.bam')):
-            cmd = ['{}samtools'.format(rundir), 'sort', '-n', mappedBam, mappedSortedQBam]
-            printAndWrite('Start Sorting BAM', 'Start Sorting BAM', logger, 'info')
-            logger.debug(' '.join(cmd))
-            try:
-                call(cmd, logger)
-            except sp.CalledProcessError:
-                printAndWrite('Error in Sorting BAM (qname). Exiting.', 'Exiting.', logger, 'exception')
-                sys.exit(1)
-            except OSError:
-                logger.warning('Could not find samtools in working directory. Trying global next.')
-                cmd = ['samtools', 'sort', '-n', mappedBam, mappedSortedQBam]
-                logger.debug(' '.join(cmd))
-                try:
-                    call(cmd, logger)           
-                except sp.CalledProcessError:
-                    printAndWrite('Error in Sorting BAM (qname). Exiting.', 'Exiting.', logger, 'exception')
-                    sys.exit(1)
-            printAndWrite('End Sorting BAM (qname)', 'End Sorting BAM (qname)', logger, 'info')
-        mappedSortedQBam += '.bam'
-
 
         # sak (fastq to fasta)
         # ~/bin/sak reads.1.fastq -o reads.1.fa
