@@ -1,7 +1,9 @@
 #! /usr/bin/env python
 
+from __future__ import print_function, division
 import sys
 import os
+from os.path import basename
 import argparse
 if sys.version_info < (3, 2):
     import subprocess32 as sp
@@ -11,6 +13,10 @@ import select
 import logging
 import time
 import hgt_eval
+import itertools
+from pysam import Samfile, AlignedRead
+from collections import defaultdict
+
 
 # https://gist.github.com/hangtwenty/6390750
 def call(popenargs, logger, stdout_log_level=logging.DEBUG, stderr_log_level=logging.ERROR, **kwargs):
@@ -211,27 +217,29 @@ def pipeline(args):
         logging.basicConfig(format='%(levelname)s:%(message)s', filename='{}{}{}_{}_{}.log.txt'.format(args.outdir, args.task, readname, accref, donref), filemode='w',  level=logging.DEBUG)
         logger = logging.getLogger('log_subprocesses')
 
+
+    # Joining candidate genomes
+    # cat acc.fa don.fa > acc_don.fa
+    candidateRef = '{}{}_{}.fa'.format(args.outdir, accref, donref)
+    if (args.donref2 is not None):
+        candidateRef = '{}{}_{}_{}.fa'.format(args.outdir, accref, donref, donref2)
+    if args.b_preproc and (args.b_new or not checkExistence(logger,'Joining Candidate Genomes',candidateRef)):
+        cmd = 'cat {} {} > {} && sed -i "/^[^>]/ s/[^ACTG]/N/g" {}'.format(args.accref, args.donref, candidateRef, candidateRef)
+        if (args.donref2 is not None):
+            cmd = 'cat {} {} {} > {} && sed -i "/^[^>]/ s/[^ACTG]/N/g" {}'.format(args.accref, args.donref, args.donref2, candidateRef, candidateRef)
+        printAndWrite('Start Joining Candidate Genomes', 'Start Joining Candidate Genomes', logger, 'info')
+        logger.debug(cmd)
+        try:
+            call(cmd, logger, shell=True)
+        except sp.CalledProcessError:
+            printAndWrite('Error in cat. Exiting.', 'Exiting.', logger, 'exception')
+            sys.exit(1)
+        printAndWrite('End Joining Candidate Genomes', 'End Joining Candidate Genomes', logger, 'info')
+
+
     # In sensitive mode, run pipeline with Gustaf, else use Clever
     if args.b_sensitive:
         printAndWrite('Running sensitive mode', 'Running sensitive mode', logger, 'info')
-        # Joining candidate genomes
-        # cat acc.fa don.fa > acc_don.fa
-
-        candidateRef = '{}{}_{}.fa'.format(args.outdir, accref, donref)
-        if (args.donref2 is not None):
-            candidateRef = '{}{}_{}_{}.fa'.format(args.outdir, accref, donref, donref2)
-        if args.b_preproc and (args.b_new or not checkExistence(logger,'Joining Candidate Genomes',candidateRef)):
-            cmd = 'cat {} {} > {} && sed -i "/^[^>]/ s/[^ACTG]/N/g" {}'.format(args.accref, args.donref, candidateRef, candidateRef)
-            if (args.donref2 is not None):
-                cmd = 'cat {} {} {} > {} && sed -i "/^[^>]/ s/[^ACTG]/N/g" {}'.format(args.accref, args.donref, args.donref2, candidateRef, candidateRef)
-            printAndWrite('Start Joining Candidate Genomes', 'Start Joining Candidate Genomes', logger, 'info')
-            logger.debug(cmd)
-            try:
-                call(cmd, logger, shell=True)
-            except sp.CalledProcessError:
-                printAndWrite('Error in cat. Exiting.', 'Exiting.', logger, 'exception')
-                sys.exit(1)
-            printAndWrite('End Joining Candidate Genomes', 'End Joining Candidate Genomes', logger, 'info')
 
 
         # yara indexer of joined candidate genomes
@@ -581,11 +589,117 @@ def pipeline(args):
                 printAndWrite('Error in Extracting Single Boundaries. Exiting.', 'Exiting.', logger, 'exception')
                 sys.exit(1)
             printAndWrite('End Extracting Single Boundaries', 'End Extracting Single Boundaries', logger, 'info')
-    # Run fast mode (Clever and Laser)
+    # Run fast mode (Laser)
     else:
         printAndWrite('Running fast mode', 'Running fast mode', logger, 'info')
         hgt_cand = '{}hgt_cand_{}{}_{}_{}.txt'.format(args.outdir, args.task, readname, accref, donref)
         mappedSortedQBam = '{}{}{}_{}_{}.sort-qname'.format(args.outdir, args.task, readname, accref, donref)
+        outfile = open(hgt_cand, 'w')
+        bam_prefix = mappedSortedQBam.replace('sort-qname', 'unsorted')
+
+        printAndWrite('Start BWA index (laser)', 'Start BWA index (laser)', logger, 'info')
+        cmd = ['{}bwa'.format(rundir), 'index', candidateRef]
+        logger.debug(' '.join(cmd))
+        try:
+            call(cmd, logger)
+        except sp.CalledProcessError:
+            printAndWrite('Error in BWA index. Exiting.', 'Exiting.', logger, 'exception')
+            sys.exit(1)
+        except OSError:
+            logger.warning('Could not find BWA index in working directory. Trying global next.')
+            cmd = ['bwa', 'index', candidateRef]
+            logger.debug(' '.join(cmd))
+            try:
+                call(cmd, logger)
+            except sp.CalledProcessError:
+                printAndWrite('Error in BWA index. Exiting.', 'Exiting.', logger, 'exception')
+                sys.exit(1)
+        printAndWrite('End BWA index (laser)', 'End BWA index (laser)', logger, 'info')
+
+        cmd = ['{}laser'.format(rundir),'--extra-sensitive','-w 1','--core-options=-i 1000','--interchromosomal', candidateRef, args.read1fasta, args.read2fasta, bam_prefix]
+        printAndWrite('Start Laser', 'Start Laser', logger, 'info')
+        logger.debug(' '.join(cmd))
+        try:
+            call(cmd, logger)
+        except sp.CalledProcessError:
+            printAndWrite('Error in Laser. Exiting.', 'Exiting.', logger, 'exception')
+            sys.exit(1)
+        except OSError:
+            logger.warning('Could not find Laser in working directory. Trying global next.')
+            cmd = ['laser','--extra-sensitive','-w 1','--core-options=-i 1000','--interchromosomal', candidateRef, args.read1fasta, args.read2fasta, bam_prefix]
+            logger.debug(' '.join(cmd))
+            try:
+                call(cmd, logger)
+            except sp.CalledProcessError:
+                printAndWrite('Error in Laser. Exiting.', 'Exiting.', logger, 'exception')
+                sys.exit(1)
+        printAndWrite('End Laser', 'End Laser', logger, 'info')
+
+
+        #unsorted BAM
+        bamfile = bam_prefix+'.bam'
+        #sort BAM
+        cmd = ['{}samtools'.format(rundir), 'sort', '-n', bamfile, mappedSortedQBam]
+        printAndWrite('Start Sorting BAM', 'Start Sorting BAM', logger, 'info')
+        logger.debug(' '.join(cmd))
+        try:
+            call(cmd, logger)
+        except sp.CalledProcessError:
+            printAndWrite('Error in Sorting BAM (qname). Exiting.', 'Exiting.', logger, 'exception')
+            sys.exit(1)
+        except OSError:
+            logger.warning('Could not find samtools in working directory. Trying global next.')
+            cmd = ['samtools', 'sort', '-n', bamfile, mappedSortedQBam]
+            logger.debug(' '.join(cmd))
+            try:
+                call(cmd, logger)
+            except sp.CalledProcessError:
+                printAndWrite('Error in Sorting BAM (qname). Exiting.', 'Exiting.', logger, 'exception')
+                sys.exit(1)
+        printAndWrite('End Sorting BAM (qname)', 'End Sorting BAM (qname)', logger, 'info')
+        mappedSortedQBam += '.bam'
+
+
+        #dict for reference genomes; key=GI/Accession, value=DNA-string
+        genomes = defaultdict(str)
+
+        ref_fasta = open(candidateRef,'r')
+        GID=''
+        for line in ref_fasta:
+            if line.startswith('>'):
+                GID = line.split()[0].replace('>','')
+            else:
+                genomes[GID] += line.strip()
+
+        ref_fasta.close()
+
+        #read BAMfile
+        inputfile = Samfile(bamfile, 'rb')
+        # dict mapping breakpoints to the number of supporting reads
+        bpdict = defaultdict(int)
+
+        printAndWrite('Start extracting HGT candidates (laser)', 'Start extracting HGT candidates (laser)', logger, 'info')
+        for aln in inputfile:
+            #dict mapping SAM tags to their entries
+            tag_dict = dict(aln.tags)
+            #only alignments with Breakpoints are considered
+            if 'BP' in tag_dict:
+                gen1,pos1 = tag_dict['BP'].split(';')[0].split(',')
+                gen2,pos2 = tag_dict['BP'].split(';')[1].split(',')
+                #get base for position and genome
+                base1 = genomes[gen1][int(pos1)-1]
+                base2 = genomes[gen2][int(pos2)-1]
+                breakpoint = gen1+'\t'+pos1+'\t'+base1+'\t'+gen2+'\t'+pos2+'\t'+base2
+                bpdict[breakpoint] +=1
+
+
+        for breakpoint in bpdict:
+            outfile.write(breakpoint + '\t' + str(bpdict[breakpoint]) + '\n')
+
+        outfile.close()
+        printAndWrite('End extracting HGT candidates (laser)', 'End extracting HGT candidates (laser)', logger, 'info')
+
+
 
     # Phage screening
     phagesam = None
@@ -698,8 +812,10 @@ def pipeline(args):
     print ("Total time: ", time.time() - tstart)
 
     # Delete all files in the output directory but results and logs.
+    # TODO It is not safe to delete everything else, esp. when there are multiple jobs running
     try:
         if args.b_del:
+            #cmd = ('find {} -type f -regextype posix-extended  \( -wholename \'{}\' \) -delete').format(args.outdir, mapping)
             cmd = ('find {} -type f -regextype posix-extended ! \( -iregex'
                 ' \'(.*\.(txt)|.*hgt_eval.*\.(tsv|vcf))$\' -o -name \'{}\' -o -name \'{}\' \) -delete').format(args.outdir, args.read1fasta, args.read2fasta)
             logger.debug(cmd)
