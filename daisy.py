@@ -271,7 +271,8 @@ def pipeline(args):
         # ~/bin/yara_mapper -o *all.sam reads.1.fasta reads.2.fasta -a -e 10
 
         mapping = '{}{}{}_{}_{}.sam'.format(args.outdir, args.task, readname, accref, donref)
-        if args.b_preproc and (args.b_new or not checkExistence(logger,'Yara Mapping',mapping)): 
+        mappedBam = '{}{}{}_{}_{}.bam'.format(args.outdir, args.task, readname, accref, donref)
+        if args.b_preproc and (args.b_new or not checkExistence(logger,'Yara Mapping', mappedBam)): 
             cmd = [x for x in ['{}yara_mapper'.format(rundir), yaraIndex, args.read1fasta, args.read2fasta, '-o', mapping, '-e', args.yara_e, '-ll', args.ll, '-le', args.le, '-t', args.yara_t] if x is not None]
             printAndWrite('Start Yara Mapping', 'Start Yara Mapping', logger, 'info')
             logger.debug(' '.join(cmd))
@@ -293,7 +294,6 @@ def pipeline(args):
 
         # samtools view -bS *all.sam -o *all.bam
 
-        mappedBam = '{}{}{}_{}_{}.bam'.format(args.outdir, args.task, readname, accref, donref)
         if args.b_preproc and checkExistence(logger, 'Generating', mapping) and (args.b_new or not checkExistence(logger, 'Generating Mapped BAM', mappedBam)):
             cmd = ['{}samtools'.format(rundir), 'view', '-b', '-S', mapping, '-o', mappedBam]
             printAndWrite('Start Converting Mapped Sam to BAM', 'Start Converting Mapped Sam to BAM', logger, 'info')
@@ -732,7 +732,8 @@ def pipeline(args):
         # ~/bin/yara_mapper -o *phage_all.sam reads.1.fasta reads.2.fasta -a -e 10
 
         phagemapping = '{}Phage_{}.sam'.format(args.outdir, readname)
-        if args.b_phage and (args.b_new or not checkExistence(logger, 'Yara Mapping', phagemapping)): 
+        phagesam = '{}Phage_{}_mapped.sam'.format(args.outdir, readname)
+        if args.b_phage and (args.b_new or not checkExistence(logger, 'Yara Mapping', phagesam)): 
             cmd = [x for x in ['{}yara_mapper'.format(rundir), yaraIndex, args.read1fasta, args.read2fasta, '-o', phagemapping, '-e', args.yara_e, '-ll', args.ll, '-le', args.le, '-t', args.yara_t] if x is not None]
             printAndWrite('Start Yara Mapping Phage database', 'Start Yara Mapping Phage database', logger, 'info')
             logger.debug(' '.join(cmd))
@@ -754,7 +755,6 @@ def pipeline(args):
 
         # extracting only mapped phage reads
         # ~/bin/samtools view -h -S -F 4 Phage_all.sam > Phage_all_mapped.sam
-        phagesam = '{}Phage_{}_mapped.sam'.format(args.outdir, readname)
         if args.b_phage and (args.b_new or not checkExistence(logger,'Sorting Mapping', phagesam)):
             cmd = ['{}samtools'.format(rundir), 'view', '-h', '-F', '4', '-S', phagemapping, '-o', phagesam]
             printAndWrite('Start Samtools extraction of mapped reads', 'Start Samtools extraction of mapped reads', logger, 'info')
@@ -775,6 +775,22 @@ def pipeline(args):
                     sys.exit(1)
             printAndWrite('End Samtools extraction of mapped reads', 'End Samtools extraction of mapped reads', logger, 'info')
  
+        # Delete sam file
+        try:
+            #if args.b_del:
+            printAndWrite('Deleting Phage Sam files', 'Deleting Phage Sam files', logger, 'info')
+            cmd = ('find {} -type f -regextype posix-extended  \( -wholename \'{}\' \) -delete').format(args.outdir, phagemapping)
+            logger.debug(cmd)
+            call(cmd, logger, shell=True)
+        except Exception as e:
+            printAndWrite(
+                'Error in Deleting.',
+                'Error in Deleting.',
+                logger,
+                'exception')
+            pass
+
+
     # HGT candidate evaluation
     # python ~/bin/hgt_eval.py -o hgt_eval*.vcf  --min_size 500 --max_size 55000 Ecoli_K12_mod_HPylori_1322000-1350000_mod.sort-qname.bam hgt_cand*.txt  "gi|170079663|ref|NC_010473.1|" "gi|766541424|dbj|AP014710.1|"
     #  #!usr/bin/env python as first line in hgt_eval.py => ./hgt_eval.py will run python hgt_eval.py. (Or import it as module.)
@@ -783,7 +799,7 @@ def pipeline(args):
         hgteval_vcf = '{}hgt_eval_{}{}_{}_{}.vcf'.format(args.outdir, args.task, readname, accref, donref)
         if args.b_eval and (args.b_new or not checkExistence(logger,'Sorting Mapping', hgteval_vcf)):
             cmd = [x for x in ['python', '{}hgt_eval.py'.format(rundir), mappedSortedQBam, hgt_cand, args.acceptor, args.donor, '--phagefile' if args.phage_ref is not None else None, phagesam,
-             '-o', hgteval_vcf, '--min-size', args.h_min, '--max-size', args.h_max, '--tolerance', args.h_tol, '--pair-support' if args.h_pairs is False else None, '--num-boot-regions', args.h_bootnum, '--boot-sens', args.h_bootsens] if x is not None]
+             '-o', hgteval_vcf, '-min', args.h_min, '-max', args.h_max, '--tolerance', args.h_tol, '--pair-support' if args.h_pairs is False else None, '--num-boot-regions', args.h_bootnum, '--boot-sens', args.h_bootsens] if x is not None]
             # hgt_eval.func(parameter)
             printAndWrite('Start HGT evaluation', 'Start HGT evaluation', logger, 'info')
             logger.debug(' '.join(cmd))
@@ -798,7 +814,7 @@ def pipeline(args):
             hgteval_vcf = '{}hgt_eval_{}{}_{}_{}.vcf'.format(args.outdir, args.task, readname, accref, don_id)
             if args.b_eval and (args.b_new or not checkExistence(logger,'Sorting Mapping', hgteval_vcf)):
                 cmd = [x for x in ['python', '{}hgt_eval.py'.format(rundir), mappedSortedQBam, hgt_cand, args.acceptor, don_gi, '--phagefile' if args.phage_ref is not None else None, phagesam,
-                 '-o', hgteval_vcf, '--min-size', args.h_min, '--max-size', args.h_max, '--tolerance', args.h_tol, '--pair-support' if args.h_pairs is False else None, '--num-boot-regions', args.h_bootnum, '--boot-sens', args.h_bootsens] if x is not None]
+                 '-o', hgteval_vcf, '-min', args.h_min, '-max', args.h_max, '--tolerance', args.h_tol, '--pair-support' if args.h_pairs is False else None, '--num-boot-regions', args.h_bootnum, '--boot-sens', args.h_bootsens] if x is not None]
                 # hgt_eval.func(parameter)
                 printAndWrite('Start HGT evaluation', 'Start HGT evaluation', logger, 'info')
                 logger.debug(' '.join(cmd))
@@ -812,12 +828,14 @@ def pipeline(args):
     print ("Total time: ", time.time() - tstart)
 
     # Delete all files in the output directory but results and logs.
-    # TODO It is not safe to delete everything else, esp. when there are multiple jobs running
     try:
         if args.b_del:
-            #cmd = ('find {} -type f -regextype posix-extended  \( -wholename \'{}\' \) -delete').format(args.outdir, mapping)
-            cmd = ('find {} -type f -regextype posix-extended ! \( -iregex'
-                ' \'(.*\.(txt)|.*hgt_eval.*\.(tsv|vcf))$\' -o -name \'{}\' -o -name \'{}\' \) -delete').format(args.outdir, args.read1fasta, args.read2fasta)
+            cmd = ('find {} -type f -regextype posix-extended  \( -wholename \'{}\' -o -wholename \'{}\'  -o -wholename \'{}\' -o -wholename \'{}\' -o -wholename \'{}\' -o '
+                '-wholename \'{}\'  -o -wholename \'{}\' -o -wholename \'{}\' -o -wholename \'{}\' -o -wholename \'{}\' -o -wholename \'{}\' -o -wholename \'{}\' \) -delete').format(args.outdir, gustaf_vcf, gustaf_gff,
+                gmj, stellar, mappedSortedQBam, unmappedSortedBam, unmappedSortedFastq1, unmappedSortedFastq2, unmappedSortedFasta1, unmappedSortedFasta2, phagesam, candidateRef)
+            logger.debug(cmd)
+            call(cmd, logger, shell=True)
+            cmd = ('find {} -type f -regextype posix-extended \( -iregex \'({}.(lf.*|rid.*|sa.*|txt.*))$\' \) -delete').format(args.outdir, yaraIndex)
             logger.debug(cmd)
             call(cmd, logger, shell=True)
     except Exception as e:
