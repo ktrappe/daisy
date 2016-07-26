@@ -39,8 +39,8 @@ def read_primary_pairs(inputfile):
     second = None
     name = None
     for aln in inputfile:
-        if (aln.qname != name) and (name != None):
-            if (first != None) and (second != None):
+        if (aln.qname != name) and (name is not None):
+            if (first is not None) and (second is not None):
                 yield (first, second)
             first = None
             second = None
@@ -51,7 +51,7 @@ def read_primary_pairs(inputfile):
             first = aln
         if aln.is_read2:
             second = aln
-    if (first != None) and (second != None):
+    if (first is not None) and (second is not None):
         yield (first, second)
 
 def read_pairs(inputfile):
@@ -59,9 +59,9 @@ def read_pairs(inputfile):
     second = None
     name = None
     for aln in inputfile:
-        if (first != None) and (second != None):
+        if (first is not None) and (second is not None):
             yield (first, second)
-        if (aln.qname != name) and (name != None):
+        if (aln.qname is not name) and (name is not None):
             first = None
             second = None
         name = aln.qname
@@ -71,7 +71,7 @@ def read_pairs(inputfile):
             first = aln
         if aln.is_read2:
             second = aln
-    if (first != None) and (second != None):
+    if (first is not None) and (second is not None):
         yield (first, second)
 
 # Get all read names from phage sam file
@@ -84,7 +84,7 @@ def read_phage_pairs(inputfile):
 
 def get_random_regions(hgt_size, tabu_start, tabu_end, gen_size, num_regions):
     randrange = random.randrange
-    return (get_random_region(hgt_size, tabu_start, tabu_end, gen_size, randrange) for x in xrange(num_regions))
+    return (get_random_region(hgt_size, tabu_start, tabu_end, gen_size, randrange) for x in range(num_regions))
     
 # Generate random regions outside of candidate HGT region ("tabu region")
 def get_random_region(hgt_size, tabu_start, tabu_end, gen_size, randrange):
@@ -163,12 +163,12 @@ class HGT:
         l1, l2 = zip(*it)
         self.boot_acc_start_list = list(l1)
         self.boot_acc_end_list = list(l2)
-        self.boot_acc_coverage_list = map(lambda x: np.mean(acc_covs[x[0]:x[1]]), it)
+        self.boot_acc_coverage_list = list(map(lambda x: np.mean(acc_covs[x[0]:x[1]]), it))
         it = list(get_random_regions((self.don_end - self.don_start), self.don_start, self.don_end, options.don_length, options.boot_num))
         l1, l2 = zip(*it)
         self.boot_don_start_list = list(l1)
         self.boot_don_end_list = list(l2)
-        self.boot_don_coverage_list = map(lambda x: np.mean(don_covs[x[0]:x[1]]), it)
+        self.boot_don_coverage_list = list(map(lambda x: np.mean(don_covs[x[0]:x[1]]), it))
         if (options.paired_reads):
             self.boot_crossing_pairs_list = [0] * options.boot_num
             self.boot_don_pairs_list = [0] * options.boot_num
@@ -181,7 +181,7 @@ class HGT:
 
 # Check for duplicate HGT entry, i.e. a HGT with all 4 boundaries within tolerance, resp.
 def duplicate_entry(hgt_list, tolerance, acc_start, acc_end, don_start, don_end, split_support):
-    for i in xrange(0, len(hgt_list)):
+    for i in range(0, len(list(hgt_list))):
         last_hgt = hgt_list[i]
         if (abs(last_hgt.acc_start - acc_start) < tolerance and
             abs(last_hgt.acc_end - acc_end) < tolerance and
@@ -207,7 +207,7 @@ def main():
     parser.add_argument('--tolerance', default=20, type=int, help="Position range to remove duplicates, default 20")
     parser.add_argument('--pair-support', dest='paired_reads', default=True, action='store_false', help="Turn on/off paired reads support, default TRUE")
     parser.add_argument('--num-boot-regions', dest='boot_num', default=100, type=int, help="Number of sampled regions in acceptor for bootstrapping expected number of pairs and coverage for filtering, default 100")
-    parser.add_argument('--boot-sens', dest='boot_sens', default=95, type=int, choices=xrange(0, 100), help="Percent of cases for the candidate region to exceed values of sampled regions, default 95 percent")
+    parser.add_argument('--boot-sens', dest='boot_sens', default=95, type=int, choices=range(0, 100), help="Percent of cases for the candidate region to exceed values of sampled regions, default 95 percent")
 
     options = parser.parse_args()
 
@@ -263,11 +263,11 @@ def main():
 
     # Pair up single boundary candidates to HGT candidates conforming to size constraints
     hgt_list = []
-    for ps in xrange(0, len(cand_list)):
+    for ps in range(0, len(cand_list)):
         cand_start = cand_list[ps]
         acc_start = cand_start.acc_pos
         don_start_temp = cand_start.don_pos
-        for pe in xrange(ps, len(cand_list)):
+        for pe in range(ps, len(cand_list)):
             cand_end = cand_list[pe]
             acc_end = cand_end.acc_pos + 1
             don_end_temp = cand_end.don_pos + 1
@@ -310,6 +310,7 @@ def main():
     print ("total sample time ", time.clock() - tstart)
     
     # Output results       
+    print ("writing output")
     with open(options.outfile, 'w') as vcf_out, open(options.out_all, 'w') as output:
         # VCF header
         writevcf = csv.writer(vcf_out, delimiter = '\t')
@@ -345,12 +346,12 @@ def main():
         thresh = sens * float(options.boot_num)
         for hgt in hgt_list:
             # evaluate bootstrap
-            acc_cov_test = sum(1 for i in xrange(len(hgt.boot_acc_coverage_list)) if hgt.acc_mean > hgt.boot_acc_coverage_list[i])
-            don_cov_test = sum(1 for i in xrange(len(hgt.boot_don_coverage_list)) if hgt.don_mean > hgt.boot_don_coverage_list[i])
+            acc_cov_test = sum(1 for i in range(len(list(hgt.boot_acc_coverage_list))) if hgt.acc_mean > hgt.boot_acc_coverage_list[i])
+            don_cov_test = sum(1 for i in range(len(list(hgt.boot_don_coverage_list))) if hgt.don_mean > hgt.boot_don_coverage_list[i])
             if (options.paired_reads):
                 # write all candidates to tsv file
-                cross_pair_test = sum(1 for i in xrange(len(hgt.boot_crossing_pairs_list)) if hgt.pair_support > hgt.boot_crossing_pairs_list[i])
-                don_pair_test = sum(1 for i in xrange(len(hgt.boot_don_pairs_list)) if hgt.don_pair_support > hgt.boot_don_pairs_list[i])
+                cross_pair_test = sum(1 for i in range(len(list(hgt.boot_crossing_pairs_list))) if hgt.pair_support > hgt.boot_crossing_pairs_list[i])
+                don_pair_test = sum(1 for i in range(len(list(hgt.boot_don_pairs_list))) if hgt.don_pair_support > hgt.boot_don_pairs_list[i])
                 phage_support = 0
                 if ((hgt.pair_support + hgt.don_pair_support) > 0):
                     phage_support = float(hgt.phage_hits)/float((hgt.pair_support + hgt.don_pair_support))
@@ -376,5 +377,5 @@ def main():
 
 if __name__ == '__main__':
         #profile.run('re.compile("main")')
-        sys.exit(main())
+        main()
 
