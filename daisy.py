@@ -108,8 +108,8 @@ def producedict():
     argsD['h_pairs'] = '--hgteval_pairsupport'
     argsD['h_bootnum'] = '--hgteval_bootnum'
     argsD['h_bootsens'] = '--hgteval_bootsens'
-    argsD['le'] = '--le'
-    argsD['ll'] = '--ll'
+    argsD['g_le'] = '--le'
+    argsD['g_ll'] = '--ll'
     argsD['outdir'] = '--outdir'
     argsD['phage_dir'] = '--phage_dir'
     argsD['phage_ref'] = '--phage_ref'
@@ -142,8 +142,8 @@ def parser():
     required.add_argument('-a', '--acceptor', dest='acceptor', nargs='?', type=str, required=True, default=None, help='Name of acceptor (gi from reference file)')
     mutrequired.add_argument('-d', '--donor', dest='donor', nargs='?', type=str, default=None, help='Name(s) of donor (gi from reference file)')
     mutrequired.add_argument('-d2', '--donor2', dest='donor2', nargs='?', type=str, default=None, help='File of names of donor (gi from reference file); one gi per line')
-    optional.add_argument('-ll', '--lib_length', dest='ll', nargs='?', type=validInt, default='500', help='Library length/size. (Default: %(default)s)')
-    optional.add_argument('-le', '--lib_error', dest='le', nargs='?', type=validInt, default='50', help='Library error. (Default: %(default)s)')
+    optional.add_argument('-ll', '--lib_length', dest='g_ll', nargs='?', type=validInt, default='500', help='Library length/size. (Default: %(default)s)')
+    optional.add_argument('-le', '--lib_error', dest='g_le', nargs='?', type=validInt, default='50', help='Library error. (Default: %(default)s)')
     optional.add_argument('-t', '--task', dest='task', nargs='?', type=str, default='', help='Define optional taskname. Will be used as prefix for created files.')
     # Restore to store_true and False after inclusion of Clever
     optional.add_argument('--sensitive', dest='b_sensitive', action='store_false', default=True, help='Run sensitive mode (using Gustaf instead of Clever) (Default: %(default)s)')
