@@ -566,7 +566,7 @@ def pipeline(args):
             except OSError:
                 logger.warning('Could not find Gustaf in working directory. Trying global next.')
                 cmd = [x for x in ['gustaf', candidateRef, unmappedSortedFasta1, unmappedSortedFasta2, '-m', stellar, '-gff', gustaf_gff, '-vcf', gustaf_vcf, '-st', args.g_st, '-bth', args.g_bth,
-                    '-gth', args.g_gth, '-ith', args.g_ith, '-ll', args.ll, '-le', args.le, '-cbp' if args.g_cbp is True else None, '-nth', args.g_nth] if x is not None]
+                    '-gth', args.g_gth, '-ith', args.g_ith, '-ll', args.g_ll, '-le', args.g_le, '-cbp' if args.g_cbp is True else None, '-nth', args.g_nth] if x is not None]
                 logger.debug(' '.join(cmd))
                 try:
                     call(cmd, logger)           
@@ -734,7 +734,7 @@ def pipeline(args):
         phagemapping = '{}Phage_{}.sam'.format(args.outdir, readname)
         phagesam = '{}Phage_{}_mapped.sam'.format(args.outdir, readname)
         if args.b_phage and (args.b_new or not checkExistence(logger, 'Yara Mapping', phagesam)): 
-            cmd = [x for x in ['{}yara_mapper'.format(rundir), yaraIndex, args.read1fasta, args.read2fasta, '-o', phagemapping, '-e', args.yara_e, '-ll', args.ll, '-le', args.le, '-t', args.yara_t] if x is not None]
+            cmd = [x for x in ['{}yara_mapper'.format(rundir), yaraIndex, args.read1fasta, args.read2fasta, '-o', phagemapping, '-e', args.yara_e, '-t', args.yara_t] if x is not None]
             printAndWrite('Start Yara Mapping Phage database', 'Start Yara Mapping Phage database', logger, 'info')
             logger.debug(' '.join(cmd))
             try:
@@ -744,7 +744,7 @@ def pipeline(args):
                 sys.exit(1)
             except OSError:
                 logger.warning('Could not find Yara Mapper in working directory. Trying global next.')
-                cmd = [x for x in ['yara_mapper', yaraIndex, args.read1fasta, args.read2fasta, '-o', phagemapping, '-e', args.yara_e, '-ll', args.ll, '-le', args.le, '-t', args.yara_t] if x is not None]
+                cmd = [x for x in ['yara_mapper', yaraIndex, args.read1fasta, args.read2fasta, '-o', phagemapping, '-e', '-t', args.yara_t] if x is not None]
                 logger.debug(' '.join(cmd))
                 try:
                     call(cmd, logger)           
