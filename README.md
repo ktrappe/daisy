@@ -12,6 +12,8 @@ Gustaf for mapping, and contains a Python based evaluation routine.
 Contact: kathrin.trappe@fu-berlin.de
 
 ## Installing Daisy
+Daisy is undergoing some refactoring and upgrading, please let us know if you encounter any problems.
+
 Daisy needs to have Python installed. For versions < 3.2, please install the package
 `subprocess32` additionally.
 The easiest way to get Daisy is to
@@ -22,7 +24,7 @@ be installed either in your `~/bin/` as well or be globally avaible for all
 users on your server.
 
 ###### Samtools, Bedtools
-To install Samtools and Bedtools, please follow the installation guides given
+Daisy requires the old `0.1.19 samtools release` (due to parameter changes in more recent smatools versions). To install Samtools and Bedtools, please follow the installation guides given
 on
 http://samtools.sourceforge.net/
 and
