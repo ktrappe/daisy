@@ -13,6 +13,7 @@ import select
 import logging
 import time
 import hgt_eval
+import ducksim_argparse as prsr
 import itertools
 from pysam import Samfile, AlignedRead
 from collections import defaultdict
@@ -203,10 +204,10 @@ def pipeline(args):
         args.argF.close()
     
     readname = os.path.basename(args.read1fasta).split('.')[0]
-    accref = os.path.basename(args.accref).split('.')[0]
-    donref = os.path.basename(args.donref).split('.')[0]
+    accref = os.path.basename(args.accref).split('_')[0]
+    donref = os.path.basename(args.donref).split('_')[0] # split('.')
     if (args.donref2 is not None):
-        donref2 = os.path.basename(args.donref2).split('.')[0]
+        donref2 = os.path.basename(args.donref2).split('_')[0]
     if (args.task != ''):
         args.task += '_'
 
@@ -848,5 +849,7 @@ def pipeline(args):
 
 
 if __name__ == '__main__':
-    args = parser().parse_args()
+    #args = parser().parse_args()
+    daisy_parser = prsr.daisy_parser()
+    args = daisy_parser.parse_args()
     pipeline(args)
