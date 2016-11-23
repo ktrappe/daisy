@@ -99,3 +99,8 @@ identical IDs and introduce the event tag 'HGT'.
 
 See http://www.1000genomes.org/wiki/analysis/variant%20call%20format/vcf-variant-call-format-version-41
 for information about the VCF file format specifications.
+
+## Reference
+Trappe K., Marschall T., Renard B.Y. (2016). 
+Detecting horizontal gene transfer by mapping sequencing reads across species boundaries. 
+[Bioinformatics 32(17):i595-i604](https://academic.oup.com/bioinformatics/article-lookup/doi/10.1093/bioinformatics/btw423)
