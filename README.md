@@ -37,7 +37,7 @@ http://www.seqan.de). Please check out the latest
 developer version of SeqAn on:
 http://github.com/seqan/seqan/tree/develop/
 Follow the installation guides given on
-http://seqan.readthedocs.org/en/master/Tutorial/GettingStarted/LinuxMakefiles.html
+https://github.com/seqan/seqan
 
 Precompiled binaries (Linux 64-bit, Windows, Mac OS X) of Yara, Stellar, Gustaf,
 and SAK can be downloaded via the SeqAn project pages:
