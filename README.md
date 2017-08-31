@@ -12,7 +12,7 @@ Gustaf for mapping, and contains a Python based evaluation routine.
 Contact: kathrin.trappe@fu-berlin.de
 
 ## Installing Daisy
-Daisy is undergoing some refactoring and upgrading, please let us know if you encounter any problems.
+A refactored and newer version of Daisy is available under https://gitlab.com/rki_bioinformatics/ in the DaisySuite project. DaisySuite includes Daisy and a novel tool, called DaisyGPS, that tackles the problem of finding suitable acceptor and donor references for Daisy.
 
 Daisy needs to have Python installed. For versions < 3.2, please install the package
 `subprocess32` additionally.
